@@ -30,5 +30,6 @@ pip install -r requirements.txt
 #### Approved label
 <img src="./images/approved-label.png">
 <br/>
+
 ---
 Ref: [CTLG-851](https://jfrog-int.atlassian.net/browse/CTLG-851)
