@@ -45,4 +45,8 @@ Ref:
 
 If you `Approve` the `Waiver Request` for a  Curation Policy with Scope  `Organization-wide` or `Specific remote repositories`, then the Approved label
 that gets created automatically  has the name in below format:
-`jfrog-waiver-policy-<POlicyID>` . For example in above screenshot the label name is `jfrog-waiver-policy-45`.
+`jfrog-waiver-policy-<PolicyID>` . 
+
+For example in above screenshot the label name `jfrog-waiver-policy-45` is created 
+where `45` is the ID of the Curation policy `"curation-blocked-remote"`.
+
