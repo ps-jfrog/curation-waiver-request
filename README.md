@@ -22,6 +22,7 @@ pip install -r requirements.txt
 <br/>
 
 #### Waiver approval 
+[Curation Waivers Approval Flow](https://jfrog.com/help/r/jfrog-security-user-guide/products/curation/manage-curation/manage-waivers)
 <img src="./images/curation-waiver-requests.png"/>
 <br/>
 <img src="./images/curation-waiver-request.png"/>
