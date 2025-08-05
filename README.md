@@ -50,3 +50,9 @@ that gets created automatically  has the name in below format:
 For example in above screenshot the label name `jfrog-waiver-policy-45` is created 
 where `45` is the ID of the Curation policy `"curation-blocked-remote"`.
 
+
+<br /><br />
+<span style="color:red;">NOTE: This feature is supported with the new Catalog service. Please validate whether your platform reflects a similar UI as shown below to ensure alignment and readiness</span>
+
+<img src="./images/new-catalog-service.png" />
+<br />
