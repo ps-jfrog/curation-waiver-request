@@ -42,6 +42,7 @@ pip install -r requirements.txt
 Ref: 
 - [CTLG-851](https://jfrog-int.atlassian.net/browse/CTLG-851)
 - [XRAY-83469](https://jfrog-int.atlassian.net/browse/XRAY-83469)
+- [XRAY-122073](https://jfrog-int.atlassian.net/browse/XRAY-122073)
 
 If you `Approve` the `Waiver Request` for a  Curation Policy with Scope  `Organization-wide` or `Specific remote repositories`, then the Approved label
 that gets created automatically  has the name in below format:
