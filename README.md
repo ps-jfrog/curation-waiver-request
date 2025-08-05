@@ -8,6 +8,9 @@ pip install -r requirements.txt
 ````
 
 ## Screenshots
+<img src="./images/waiver_request_flow.png" />
+<br />
+
 ### Artifactory
 <img src="./images/remote-repo.png" />
 <br />
@@ -16,6 +19,8 @@ pip install -r requirements.txt
 
 ### Curation
 #### Policy creation
+[Manage Policies](https://jfrog.com/help/r/jfrog-security-user-guide/products/curation/manage-curation/manage-policies)
+
 <img src="./images/curation-policy.png"/>
 <br/>
 <img src="./images/curation-policy-actions.png"/>
@@ -33,4 +38,11 @@ pip install -r requirements.txt
 <br/>
 
 ---
-Ref: [CTLG-851](https://jfrog-int.atlassian.net/browse/CTLG-851)
+
+Ref: 
+- [CTLG-851](https://jfrog-int.atlassian.net/browse/CTLG-851)
+- [XRAY-83469](https://jfrog-int.atlassian.net/browse/XRAY-83469)
+
+If you `Approve` the `Waiver Request` for a  Curation Policy with Scope  `Organization-wide` or `Specific remote repositories`, then the Approved label
+that gets created automatically  has the name in below format:
+`jfrog-waiver-policy-<POlicyID>` . For example in above screenshot the label name is `jfrog-waiver-policy-45`.
