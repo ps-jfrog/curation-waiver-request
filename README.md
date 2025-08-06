@@ -29,6 +29,7 @@ chmod +x ./jfcli.sh
 ```
 
 ## Screenshots
+### Curation Waiver Request Flow diagram :
 <img src="./images/waiver_request_flow.png" />
 <br />
 
