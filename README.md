@@ -4,7 +4,9 @@
 <br /><br />
 <span style="color:red;">NOTE: This feature is supported with the new Catalog service. Please validate whether your platform reflects a similar UI as shown below to ensure alignment and readiness</span>
 
-<img src="./images/new-catalog-service.png" />
+| OLD Catalog service | | NEW Catalog service |
+| :------: | :------: | :------: |
+| <img src="./images/old-catalog-service.jpg" /> |    | <img src="./images/new-catalog-service.png" /> |
 <br />
 
 Intead of running :
