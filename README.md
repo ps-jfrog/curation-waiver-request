@@ -16,8 +16,9 @@ pip install -r requirements.txt
 
 Do the following steps:
 
-1. Configure the jfrog cli with your artifactory instance .
-2. Modify the [jfcli.sh](jfcli.sh) script with:
+1. Please review [Curation Compliance Check](https://jfrog.com/help/r/jfrog-security-user-guide/developers/cli/curation-compliance-check)
+2. Configure the jfrog cli with your artifactory instance .
+3. Modify the [jfcli.sh](jfcli.sh) script with:
 - your artifactory instance
 - `Remote` repository ( Example: Create remote repo 'curation-blocked-remote')
 -  Create the Curation Blocking Policy ( see `"curation-blocked-remote"` in screenshots below)
@@ -72,7 +73,7 @@ where `45` is the ID of the Curation policy `"curation-blocked-remote"`.
 ---
 
 Ref: 
-- [CTLG-851](https://jfrog-int.atlassian.net/browse/CTLG-851)
+- [XRAY-124732](https://jfrog-int.atlassian.net/browse/XRAY-124732)
 - [XRAY-83469](https://jfrog-int.atlassian.net/browse/XRAY-83469)
 - [XRAY-122073](https://jfrog-int.atlassian.net/browse/XRAY-122073)
 
