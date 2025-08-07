@@ -40,8 +40,7 @@ chmod +x ./jfcli.sh
 
 <hr />
 
-### Curation
-#### Policy creation
+### Curation - Policy creation
 [Manage Policies](https://jfrog.com/help/r/jfrog-security-user-guide/products/curation/manage-curation/manage-policies)
 
 <img src="./images/curation-policy.png"/>
@@ -49,7 +48,17 @@ chmod +x ./jfcli.sh
 <img src="./images/curation-policy-actions.png"/>
 <br/>
 
-#### Waiver approval 
+
+### Developer - Install library
+<img src="./images/dev-lib-install.png">
+<br/>
+
+### Developer - Request for libraries waiver
+<img src="./images/dev-lib-request.png">
+<br/>
+
+
+### Curation - Waiver approval 
 [Curation Waivers Approval Flow](https://jfrog.com/help/r/jfrog-security-user-guide/products/curation/manage-curation/manage-waivers)
 
 If you `Approve` the `Waiver Request` for a  Curation Policy with Scope  `Organization-wide` or `Specific remote repositories`, then the Approved label
@@ -65,7 +74,7 @@ where `45` is the ID of the Curation policy `"curation-blocked-remote"`.
 <img src="./images/curation-waiver-request.png"/>
 <br/>
 
-#### Approved label
+### Curation - Approved label
 
 <img src="./images/approved-label.png">
 <br/>
