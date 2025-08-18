@@ -1,13 +1,22 @@
 # Curation Waiver Request
 
-
-<br /><br />
+## Prerequisites:
+1. <br />
 <span style="color:red;">NOTE: This feature is supported with the new Catalog service. Please validate whether your platform reflects a similar UI as shown below to ensure alignment and readiness</span>
 
 | OLD Catalog service | | NEW Catalog service |
 | :------: | :------: | :------: |
 | <img src="./images/old-catalog-service.jpg" /> |    | <img src="./images/new-catalog-service.png" /> |
 <br />
+
+2. Complete the steps in [General configuration tasks required for JFrog Curation](https://jfrog.com/help/r/jfrog-security-user-guide/products/curation/configure-curation/general)
+<img src="./images/activate_curation.png" />
+<br />
+3. Create your remote repository and connect it to JFrog Curation ( [Connect Remote Repositories to Curation](https://jfrog.com/help/r/jfrog-security-user-guide/products/curation/configure-curation/configure-repositories/connect-remote-repositories-to-curation))
+<img src="./images/connect_repo_to_curation.png" />
+<br />
+
+---
 
 Intead of running :
 ````
