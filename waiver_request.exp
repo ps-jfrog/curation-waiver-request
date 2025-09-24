@@ -1,0 +1,33 @@
+#!/usr/bin/expect -f
+
+# Enable verbose debugging output. exp_internal 1 
+# Set a timeout for commands
+set timeout -1
+
+spawn jf c s
+expect "Default:"
+
+spawn jf pipc --repo-resolve=curation-blocked-py-virtual
+expect "pip build config successfully created."
+sleep 1
+
+spawn jf ca --requirements-file=requirements.txt --format=table --threads=100 
+# Handle the waiver request prompt
+# expect "Do you want to request a waiver for any of the listed packages? (y/n) \[n\]?"
+expect "*Do you want to request a waiver*y/n) \\\[n]?"
+send "y\r"
+
+# Handle row number selection prompt
+expect "*row number(s) for which you want to request a waiver*all]:"
+send "all\r"
+
+# Handle waiver reason prompt
+expect "*reason for the waiver request:"
+send "pipeline demo\r"
+
+# Wait for the final confirmation of submission
+expect "Waiver request submitted!"
+
+# Wait for the command to finish executing
+expect eof
+puts "\nCompleted the process."
