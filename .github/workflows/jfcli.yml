@@ -1,0 +1,55 @@
+name: "JF-CLI: Curation Waiver Request"
+on:
+  push:
+    branches: 
+      - '**'
+permissions:
+  actions: read # for detecting the Github Actions environment.
+  id-token: write # for creating OIDC tokens for signing.
+  packages: write # for uploading attestations.
+  contents: read
+  security-events: write # Required for uploading code scanning.
+env:
+  JF_RT_URL: "https://psazuse.jfrog.io"
+  JOB_SUMMARY: false
+  JFROG_CLI_LOG_LEVEL: DEBUG # DEBUG, INFO, WARN, ERROR
+  DEFAULT_WORKSPACE: "${{github.workspace}}" 
+  BUILD_ID: "${{github.run_number}}.0"
+  BUILD_NAME: "cwr" # CWR - Curation Waiver Request 
+  REPO_VIRTUAL: "curation-blocked-py-virtual"
+
+jobs:
+    waiver: 
+        name: "Curation Waiver Request"
+        runs-on: ubuntu-latest
+        defaults:
+           run:
+            working-directory: "${{env.DEFAULT_WORKSPACE}}"
+        steps:
+            - name: "Install Expect"
+              run: |
+                sudo apt-get update && sudo apt-get install -y expect
+
+            - name: "Setup JFrog CLI"
+              uses: jfrog/setup-jfrog-cli@v4
+              id: jfrog-cli
+              env:
+                JF_URL: ${{env.JF_RT_URL}}
+                JFROG_CLI_LOG_LEVEL: "DEBUG"
+              with:
+                version: latest 
+                oidc-provider-name: ${{vars.JF_OIDC_PROVIDER_NAME}}
+                disable-job-summary: ${{env.JOB_SUMMARY}}
+
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: "Folder list"
+              run: | 
+                  tree .
+                        
+            - name: "Waiver Request"
+              run: | 
+                ./waiver_request.exp
+
+            
