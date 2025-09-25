@@ -49,13 +49,22 @@ try:
     # Create unique reason with timestamp
     timestamp = __import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     reason = f'pipeline demo - {timestamp}'
-    print(f"Sending reason: {reason}")
+    print(f"Sending reason: '{reason}'")
     child.sendline(reason)
     
-    # Wait for completion - try multiple patterns
+    # Wait for completion
     try:
-        child.expect(pexpect.EOF, timeout=30)
+        child.expect(pexpect.EOF)
         print("✅ Waiver request completed successfully!")
+        
+        # Print the final output from the submission
+        output = child.before.decode('utf-8')
+        if output:
+            print("\n📋 Waiver request submission output:")
+            print("=" * 50)
+            print(output)
+            print("=" * 50)
+        
         sys.exit(0)  # Success exit code
     except pexpect.TIMEOUT:
         print("Process may have completed but didn't close properly. Checking for success indicators...")
@@ -63,16 +72,15 @@ try:
         output = child.before.decode('utf-8')
         if 'waiver' in output.lower() or 'request' in output.lower():
             print("✅ Waiver request appears to have been submitted successfully!")
+            print("\n📋 Waiver request submission output:")
+            print("=" * 50)
+            print(output)
+            print("=" * 50)
             sys.exit(0)  # Success exit code
         else:
             print("❌ Could not confirm waiver request submission")
             print("Output:", output)
             sys.exit(1)  # Error exit code
-    
-    # Print any remaining output
-    output = child.before.decode('utf-8')
-    if output:
-        print("Final output:", output)
     
     child.close()
     
