@@ -1,8 +1,9 @@
 #!/usr/bin/expect -f
 
-# Enable verbose debugging output. exp_internal 1 
+# Enable verbose debugging output
+# exp_internal 1 
 # Set a timeout for commands
-set timeout -1
+set timeout 30
 
 spawn jf c s
 expect "Default:"
@@ -13,12 +14,11 @@ sleep 1
 
 spawn jf ca --requirements-file=requirements.txt --format=table --threads=100 
 # Handle the waiver request prompt
-# expect "Do you want to request a waiver for any of the listed packages? (y/n) \[n\]?"
-expect "*Do you want to request a waiver*y/n) \\\[n]?"
+expect "*Do you want to request a waiver for any of the listed packages? (y/n) \[n\]?*"
 send "y\r"
 
 # Handle row number selection prompt
-expect "*row number(s) for which you want to request a waiver*all]:"
+expect "*Please enter the row number(s) for which you want to request a waiver*"
 send "all\r"
 
 # Handle waiver reason prompt
