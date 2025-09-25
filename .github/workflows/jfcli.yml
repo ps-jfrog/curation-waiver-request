@@ -72,6 +72,10 @@ jobs:
 
             - name: "Waiver Request"
               run: | 
+                # Set CI=false to enable interactive prompts for waiver requests
+                export CI=false
                 python3 waiver_request_ci.py
+                # Reset CI=true for subsequent steps
+                export CI=true
 
             
