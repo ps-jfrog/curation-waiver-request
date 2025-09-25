@@ -52,30 +52,34 @@ try:
     print(f"Sending reason: '{reason}'")
     child.sendline(reason)
     
-    # Wait for completion
+    # Wait for completion - look for the waiver submission result
     try:
-        child.expect(pexpect.EOF)
-        print("✅ Waiver request completed successfully!")
+        # Wait for the waiver submission result table
+        child.expect('Waiver request submitted!')
+        print("✅ Waiver request submitted successfully!")
+        
+        # Wait a bit more to capture the complete table
+        child.expect(pexpect.EOF, timeout=10)
         
         # Print the final output from the submission
         output = child.before.decode('utf-8')
         if output:
-            print("\n📋 Waiver request submission output:")
-            print("=" * 50)
+            print("\n📋 Waiver request submission results:")
+            print("=" * 60)
             print(output)
-            print("=" * 50)
+            print("=" * 60)
         
         sys.exit(0)  # Success exit code
     except pexpect.TIMEOUT:
         print("Process may have completed but didn't close properly. Checking for success indicators...")
         # Check if we can find success indicators in the output
         output = child.before.decode('utf-8')
-        if 'waiver' in output.lower() or 'request' in output.lower():
+        if 'waiver request submitted' in output.lower() or 'waiver id' in output.lower():
             print("✅ Waiver request appears to have been submitted successfully!")
-            print("\n📋 Waiver request submission output:")
-            print("=" * 50)
+            print("\n📋 Waiver request submission results:")
+            print("=" * 60)
             print(output)
-            print("=" * 50)
+            print("=" * 60)
             sys.exit(0)  # Success exit code
         else:
             print("❌ Could not confirm waiver request submission")
