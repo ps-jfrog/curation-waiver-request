@@ -66,9 +66,9 @@ jobs:
               run: |
                 pip3 install pexpect
 
-            - name: "Create pip config"
-              run: |
-                jf pipc --repo-resolve=curation-blocked-py-virtual
+            # - name: "Create pip config"
+            #   run: |
+            #     jf pipc --repo-resolve=curation-blocked-py-virtual
 
             - name: "Waiver Request"
               run: | 
