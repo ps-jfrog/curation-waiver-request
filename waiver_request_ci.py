@@ -30,6 +30,9 @@ try:
     child = pexpect.spawn('jf ca --requirements-file=requirements.txt --format=table --threads=100')
     child.timeout = 120  # Set longer timeout
     
+    # Enable logging to see all output
+    child.logfile_read = sys.stdout.buffer
+    
     # Wait for the waiver request prompt
     child.expect('Do you want to request a waiver for any of the listed packages\\? \\(y/n\\) \\[n\\]\\?')
     print("Found waiver prompt, sending 'y'...")
