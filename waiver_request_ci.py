@@ -43,7 +43,11 @@ try:
     # Wait for the reason prompt
     child.expect('Please enter the reason for the waiver request:')
     print("Found reason prompt, sending reason...")
-    child.sendline('pipeline demo')
+    # Create unique reason with timestamp
+    timestamp = __import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    reason = f'pipeline demo - {timestamp}'
+    print(f"Sending reason: {reason}")
+    child.sendline(reason)
     
     # Wait for completion - try multiple patterns
     try:
