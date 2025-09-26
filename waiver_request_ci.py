@@ -54,12 +54,13 @@ try:
     
     # Wait for completion - look for the waiver submission result
     try:
-        # Wait for the waiver submission result table
-        child.expect('Waiver request submitted!')
+        # Wait for the waiver submission result table with a reasonable timeout
+        child.expect('Waiver request submitted!', timeout=30)
         print("✅ Waiver request submitted successfully!")
         
-        # Wait a bit more to capture the complete table
-        child.expect(pexpect.EOF, timeout=10)
+        # Give a moment for any additional output, then capture what we have
+        import time
+        time.sleep(3)  # Brief pause to let any final output come through
         
         # Print the final output from the submission
         output = child.before.decode('utf-8')
@@ -69,21 +70,28 @@ try:
             print(output)
             print("=" * 60)
         
+        # Close the process and exit successfully
+        child.close()
         sys.exit(0)  # Success exit code
     except pexpect.TIMEOUT:
-        print("Process may have completed but didn't close properly. Checking for success indicators...")
+        print("Timeout waiting for 'Waiver request submitted!' message. Checking current output...")
         # Check if we can find success indicators in the output
         output = child.before.decode('utf-8')
+        print(f"Current output length: {len(output)} characters")
+        
         if 'waiver request submitted' in output.lower() or 'waiver id' in output.lower():
             print("✅ Waiver request appears to have been submitted successfully!")
             print("\n📋 Waiver request submission results:")
             print("=" * 60)
             print(output)
             print("=" * 60)
+            child.close()
             sys.exit(0)  # Success exit code
         else:
             print("❌ Could not confirm waiver request submission")
-            print("Output:", output)
+            print("Last 500 characters of output:")
+            print(output[-500:] if len(output) > 500 else output)
+            child.close()
             sys.exit(1)  # Error exit code
     
     child.close()
