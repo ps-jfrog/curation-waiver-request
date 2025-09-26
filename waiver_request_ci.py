@@ -3,29 +3,27 @@
 import pexpect
 import os
 import sys
+import datetime
 
-# Config - Artifactory info
+# Config - Artifactory info (exactly like jfcli.sh)
 os.environ['JF_HOST'] = "psazuse.jfrog.io"
 os.environ['JFROG_CLI_LOG_LEVEL'] = "DEBUG"
 os.environ['RT_REPO_REMOTE'] = "curation-blocked-py-virtual"
 os.environ['JF_RT_URL'] = f"https://{os.environ['JF_HOST']}"
 os.environ['BUILD_NAME'] = "py-cli-req"
-os.environ['BUILD_ID'] = f"cmd.{__import__('datetime').datetime.now().strftime('%Y-%m-%d-%H-%M')}"
+os.environ['BUILD_ID'] = f"cmd.{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')}"
 
-print(f" JF_RT_URL: {os.environ['JF_RT_URL']}")
-print(f" JFROG_CLI_LOG_LEVEL: {os.environ['JFROG_CLI_LOG_LEVEL']}")
-print(f" BUILD_NAME: {os.environ['BUILD_NAME']}")
-print(f" BUILD_ID: {os.environ['BUILD_ID']}")
-print(f" RT_REPO_REMOTE: {os.environ['RT_REPO_REMOTE']}")
+print(f" JF_RT_URL: {os.environ['JF_RT_URL']} \\n JFROG_CLI_LOG_LEVEL: {os.environ['JFROG_CLI_LOG_LEVEL']} \\n ")
+print(f" BUILD_NAME: {os.environ['BUILD_NAME']} \\n BUILD_ID: {os.environ['BUILD_ID']} \\n RT_REPO_REMOTE: {os.environ['RT_REPO_REMOTE']}")
 
 try:
-    # Create pip config
+    # Step 1: Create pip config (exactly like jfcli.sh)
     print("Creating pip config...")
     child = pexpect.spawn('jf pipc --repo-resolve=curation-blocked-py-virtual')
     child.expect('pip build config successfully created.')
     child.close()
     
-    # Run curation audit and handle the interactive prompts
+    # Step 2: Run curation audit (exactly like jfcli.sh)
     print("Running curation audit with automated input...")
     child = pexpect.spawn('jf ca --requirements-file=requirements.txt --format=table --threads=100')
     child.timeout = 120  # Set longer timeout
@@ -33,7 +31,7 @@ try:
     # Enable logging to see all output
     child.logfile_read = sys.stdout.buffer
     
-    # Wait for the waiver request prompt
+    # Wait for the waiver request prompt (exactly like manual flow)
     child.expect('Do you want to request a waiver for any of the listed packages\\? \\(y/n\\) \\[n\\]\\?')
     print("Found waiver prompt, sending 'y'...")
     child.sendline('y')
@@ -47,7 +45,7 @@ try:
     child.expect('Please enter the reason for the waiver request:')
     print("Found reason prompt, sending reason...")
     # Create unique reason with timestamp
-    timestamp = __import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     reason = f'pipeline demo - {timestamp}'
     print(f"Sending reason: '{reason}'")
     child.sendline(reason)
