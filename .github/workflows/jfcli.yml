@@ -62,13 +62,13 @@ jobs:
                 echo " " >> $GITHUB_STEP_SUMMARY
                 echo " " >> $GITHUB_STEP_SUMMARY
               
-            - name: "Install Python dependencies"
-              run: |
-                pip3 install pexpect
-
-            # - name: "Create pip config"
+            # - name: "Install Python dependencies"
             #   run: |
-            #     jf pipc --repo-resolve=curation-blocked-py-virtual
+            #     pip3 install pexpect
+
+            - name: "Create pip config"
+              run: |
+                jf pipc --repo-resolve=curation-blocked-py-virtual
 
             - name: "Waiver Request"
               run: | 
