@@ -16,4 +16,4 @@ jf ca --requirements-file=requirements.txt --format=table --threads=100
 
 
 
-# open -a "Google Chrome" ${JF_RT_URL}/ui/package-curation/waivers-requests
+open -a "Google Chrome" ${JF_RT_URL}/ui/package-curation/waivers-requests
