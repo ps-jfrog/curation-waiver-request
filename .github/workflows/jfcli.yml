@@ -166,12 +166,4 @@ jobs:
             done
             echo " " >> $GITHUB_STEP_SUMMARY
 
-        - name: "Exit"
-          run: |  
-            exit 1
-
-        - name: "PIP Install"
-          run: |  
-              jf pip install -r requirements.txt --build-name=${{env.BUILD_NAME}} --build-number=${{env.BUILD_ID}}
-
        
