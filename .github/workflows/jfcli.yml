@@ -20,8 +20,8 @@ env:
   REPO_REMOTE: "curation-blocked-py-remote"
 
 jobs:
-  waiverRequest: 
-    name: "Curation Waiver Request via Pipeline"
+  AutoSubmitWaiverRequest: 
+    name: "Auto Submit  - Curation Waiver Request via Pipeline"
     runs-on: ubuntu-latest
     defaults:
         run:
@@ -79,8 +79,8 @@ jobs:
             # Reset CI=true for subsequent steps
             export CI=true
 
-  waiverPendingInfo: 
-    name: "Waiver Pending info"
+  waiverExistsSkipNextSteps: 
+    name: "Waiver Pendings skip the next steps"
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -161,9 +161,63 @@ jobs:
 
               if [[ ("${{env.REPO_REMOTE}}" == "${repo_key}") ]] ; then
                 echo " |  ${waiver_id} | ${pkg_name} | ${pkg_version} | ${requested_at} | ${justification} | ${decision_owners} | " >> $GITHUB_STEP_SUMMARY
+
+                echo "WAIVER_REQUEST_EXISTS=TRUE" >> $GITHUB_ENV
               fi
               
             done
             echo " " >> $GITHUB_STEP_SUMMARY
 
-       
+        - name: "Pip install "
+          if: ${{ env.WAIVER_REQUEST_EXISTS != 'TRUE' }}
+          run: |
+            jf pip install -r requirements.txt --build-name ${{env.BUILD_NAME}} --build-number ${{env.BUILD_ID}}
+
+        
+  waiverBlockingThePipeline: 
+    name: "Waiver Blocking, fail the build"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "${{env.DEFAULT_WORKSPACE}}"
+    steps:
+        - name: "Setup JFrog CLI"
+          uses: jfrog/setup-jfrog-cli@v4
+          id: jfrog-cli
+          env:
+            JF_URL: ${{env.JF_RT_URL}}
+            JFROG_CLI_LOG_LEVEL: "DEBUG"
+          with:
+            version: latest 
+            oidc-provider-name: ${{vars.JF_OIDC_PROVIDER_NAME}}
+            disable-job-summary: ${{env.JOB_SUMMARY}}
+
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: "Folder list"
+          run: | 
+              tree .
+
+        - name: "JF Show"
+          run: | 
+              jf c s
+
+        - name: "Create PY config"
+          run: |
+            jf pipc --repo-resolve=${{env.REPO_VIRTUAL}} --repo-deploy=${{env.REPO_VIRTUAL}}
+
+        - name: "Curation-Audit"
+          run: | 
+            output=$(jf ca --format=table --threads=100)
+            echo "$output"
+            if echo "$output" | grep -q "blocked package"; then # Define your failure condition
+              echo "::error::Build failed: Build contains blocked packages."
+              exit 1
+            fi
+
+        - name: "Pip install - blocked packages"
+          run: |
+            jf pip install -r requirements.txt --build-name ${{env.BUILD_NAME}} --build-number ${{env.BUILD_ID}}
+
+            

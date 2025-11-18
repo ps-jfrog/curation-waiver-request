@@ -2,7 +2,9 @@
 # jf c add --user=krishnam --interactive=true --url=https://psazuse.jfrog.io --overwrite=true 
 
 # Config - Artifactory info
-export JF_HOST="psazuse.jfrog.io"  JFROG_CLI_LOG_LEVEL="DEBUG" RT_REPO_VIRTUAL="curation-blocked-py-virtual"  RT_REPO_REMOTE="curation-blocked-py-remote" # curation-blocked-py-virtual
+export JF_HOST="psazuse.jfrog.io"  JFROG_CLI_LOG_LEVEL="DEBUG" 
+export RT_REPO_VIRTUAL="curation-blocked-py-virtual"  # krishnam-py-virtual 
+export RT_REPO_REMOTE="curation-blocked-py-remote"        # pypi-remote 
 export JF_RT_URL="https://${JF_HOST}" BUILD_NAME="py-cli-req" BUILD_ID="cmd.$(date '+%Y-%m-%d-%H-%M')" 
 
 echo " JF_RT_URL: $JF_RT_URL \n JFROG_CLI_LOG_LEVEL: $JFROG_CLI_LOG_LEVEL \n "
@@ -53,3 +55,8 @@ done
 
 rm -rf $RESP_JSON
 # open -a "Google Chrome" ${JF_RT_URL}/ui/package-curation/waivers-requests
+
+jf pip install -r requirements.txt --build-name $BUILD_NAME --build-number $BUILD_ID
+echo "Pip install completed"
+
+jf rt u dist/ pypi/
