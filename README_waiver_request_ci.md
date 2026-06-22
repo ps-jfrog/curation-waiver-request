@@ -119,17 +119,254 @@ python3 waiver_request_ci.py
 
 ## CI/CD Integration
 
-### GitHub Actions Example
+### GitHub Actions Workflow: `.github/workflows/jfcli.yml`
+
+The workflow `JF-CLI: Curation Waiver Request` triggers on every push to any branch. It defines **three independent jobs**, each demonstrating a different strategy for handling Curation-blocked packages in a pipeline.
+
+#### Workflow-level configuration
 
 ```yaml
+env:
+  JF_RT_URL: "https://psazuse.jfrog.io"
+  JFROG_CLI_LOG_LEVEL: DEBUG
+  BUILD_NAME: "cwr"                          # CWR = Curation Waiver Request
+  REPO_VIRTUAL: "curation-blocked-py-virtual"
+  REPO_REMOTE:  "curation-blocked-py-remote"
+```
+
+| Variable | Purpose |
+|---|---|
+| `JF_RT_URL` | Base URL of the JFrog Platform instance |
+| `JFROG_CLI_LOG_LEVEL` | Verbose CLI logging; useful for diagnosing waiver prompt failures |
+| `BUILD_NAME` | Identifies this build in Artifactory |
+| `REPO_VIRTUAL` | Virtual repository that aggregates the curation-blocked remote repo |
+| `REPO_REMOTE` | The underlying remote repository; used to filter pending waivers by repo key |
+
+---
+
+### Job 1: `AutoSubmitWaiverRequest` — Auto-submit via `waiver_request_ci.py`
+
+This job automatically submits a curation waiver request for all blocked packages using the PTY-based Python script.
+
+#### Steps
+
+**1. Setup JFrog CLI**
+```yaml
+- name: "Setup JFrog CLI"
+  uses: jfrog/setup-jfrog-cli@v4
+  with:
+    version: latest
+    oidc-provider-name: ${{vars.JF_OIDC_PROVIDER_NAME}}
+```
+Installs the latest JFrog CLI and authenticates using **OIDC** (no stored secrets).
+
+**2. Checkout**
+```yaml
+- name: Checkout
+  uses: actions/checkout@v4
+```
+Makes `requirements.txt` and `waiver_request_ci.py` available in the workspace.
+
+**3. Create pip config**
+```yaml
+- name: "Create pip config"
+  run: |
+    jf pipc --repo-resolve=curation-blocked-py-virtual
+```
+Configures pip to resolve packages through the JFrog virtual repository. This routes all pip traffic through Curation so blocked packages are visible to `jf ca`.
+
+**4. Waiver Request** ← _this is where `waiver_request_ci.py` is invoked_
+```yaml
 - name: "Waiver Request"
-  run: | 
+  run: |
     # Set CI=false to enable interactive prompts for waiver requests
     export CI=false
     python3 waiver_request_ci.py
     # Reset CI=true for subsequent steps
     export CI=true
 ```
+
+- **`export CI=false`** — GitHub Actions sets `CI=true` by default, which causes the JFrog CLI to suppress all interactive prompts. Setting it to `false` re-enables the `"Do you want to request a waiver?"` prompt that `waiver_request_ci.py` depends on.
+- **`python3 waiver_request_ci.py`** — runs the PTY-based automation script that:
+  1. **Re-runs `jf ca` from scratch** — spawns its own `jf ca --requirements-file=requirements.txt --format=table --threads=100` inside a real PTY. It does **not** reuse output from any prior standalone `"Curation-Audit"` step; the two runs are fully independent.
+  2. Waits for and detects `"Found N blocked packages"`
+  3. Answers `y` to the waiver prompt
+  4. Accepts `[all]` packages
+  5. Submits a timestamped waiver reason (overridable via `WAIVER_REASON` env var)
+  6. Confirms submission by detecting `"Waiver request submitted"` and the expected number of waiver IDs in the result table
+- **`export CI=true`** — restores standard CI behaviour for any subsequent steps.
+
+#### Flow diagram — Job 1
+
+```
+Push to any branch
+       │
+       ▼
+┌─────────────────────┐
+│  Setup JFrog CLI    │  ← OIDC auth, no stored secrets
+└────────┬────────────┘
+         │
+         ▼
+┌─────────────────────┐
+│  Checkout repo      │  ← requirements.txt + waiver_request_ci.py available
+└────────┬────────────┘
+         │
+         ▼
+┌─────────────────────┐
+│  jf pipc            │  ← pip routed through curation-blocked-py-virtual
+└────────┬────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────────┐
+│  export CI=false                             │
+│  python3 waiver_request_ci.py                │
+│   ├─ spawn PTY: jf ca ... --format=table     │
+│   ├─ detect "Found N blocked packages"       │
+│   ├─ answer "y" to waiver prompt             │
+│   ├─ accept [all] packages                   │
+│   ├─ send waiver reason                      │
+│   └─ validate "Waiver request submitted" + N IDs │
+│  export CI=true                              │
+└──────────────────────────────────────────────┘
+         │
+         ▼
+   ✅ Waiver IDs logged to console
+```
+
+---
+
+### Job 2: `waiverExistsSkipNextSteps` — Skip install if waivers are pending
+
+This job detects whether pending waiver requests already exist for the remote repo via the Xray REST API, and conditionally skips `pip install` if they do (to avoid re-triggering a blocked install mid-review cycle).
+
+#### Steps
+
+**1–2. Setup JFrog CLI + Checkout** — same as Job 1.
+
+**3. Create PY config**
+```yaml
+- name: "Create PY config"
+  run: |
+    jf pipc --repo-resolve=${{env.REPO_VIRTUAL}} --repo-deploy=${{env.REPO_VIRTUAL}}
+```
+Configures both resolve and deploy through the virtual repo.
+
+**4. Curation-Audit** _(diagnostic — output not captured)_
+```yaml
+- name: "Curation-Audit"
+  run: |
+    jf ca --format=table --threads=100
+```
+Runs `jf ca` to display the current audit results in the job log. This is a **read-only diagnostic step** — its output is printed to the log but not captured into a variable or passed to any subsequent step.
+
+**5. Waiver pending info**
+```yaml
+- name: "Waiver pending info"
+  env:
+    CURL_URL: "${{env.JF_RT_URL}}/xray/ui/curation/waiver_requests?pkg_type=PyPI&status=pending&num_of_rows=100&direction=asc"
+```
+Calls the JFrog Xray REST API with the OIDC token to fetch all pending PyPI waiver requests. Filters results by `REPO_REMOTE` and:
+- Writes a summary table to `$GITHUB_STEP_SUMMARY`
+- Sets `WAIVER_REQUEST_EXISTS=TRUE` in `$GITHUB_ENV` if any match is found
+
+**6. Pip install** _(conditional)_
+```yaml
+- name: "Pip install"
+  if: ${{ env.WAIVER_REQUEST_EXISTS != 'TRUE' }}
+  run: |
+    jf pip install -r requirements.txt ...
+```
+Only runs if no pending waiver exists for `REPO_REMOTE`. Skipped entirely while waivers are under review.
+
+#### Flow diagram — Job 2
+
+```
+Push to any branch
+       │
+       ▼
+  Setup + Checkout + jf pipc
+       │
+       ▼
+┌─────────────────────────────────────┐
+│  jf ca --format=table               │  ← diagnostic only, output logged
+└────────┬────────────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────────────────┐
+│  curl /xray/ui/curation/waiver_requests?status=pending│
+│  filter by REPO_REMOTE                               │
+│  write summary table → $GITHUB_STEP_SUMMARY          │
+│  if match → WAIVER_REQUEST_EXISTS=TRUE               │
+└────────┬─────────────────────────────────────────────┘
+         │
+         ▼
+  WAIVER_REQUEST_EXISTS == TRUE?
+    YES → skip pip install   NO → jf pip install -r requirements.txt
+```
+
+---
+
+### Job 3: `waiverBlockingThePipeline` — Fail the build on blocked packages
+
+This job uses `jf ca` as a **build gate**: if any blocked packages are detected, the job exits with an error and the build fails. It intentionally does not auto-submit a waiver — the developer must resolve the block before the pipeline can proceed.
+
+#### Steps
+
+**1–3. Setup JFrog CLI + Checkout + Create PY config** — same as Job 2.
+
+**4. Curation-Audit** _(output captured — build gate)_
+```yaml
+- name: "Curation-Audit"
+  run: |
+    output=$(jf ca --format=table --threads=100)
+    echo "$output"
+    if echo "$output" | grep -q "blocked package"; then
+      echo "::error::Build failed: Build contains blocked packages."
+      exit 1
+    fi
+```
+Unlike Job 2's `Curation-Audit`, here the output **is** captured into `$output`. The step:
+- Prints the audit table to the log
+- Greps for `"blocked package"` in the output
+- Fails the build with a GitHub Actions error annotation (`::error::`) if any match is found
+
+**5. Pip install — blocked packages**
+```yaml
+- name: "Pip install - blocked packages"
+  run: |
+    jf pip install -r requirements.txt --build-name ${{env.BUILD_NAME}} --build-number ${{env.BUILD_ID}}
+```
+Only reached if step 4 passed (no blocked packages detected).
+
+#### Flow diagram — Job 3
+
+```
+Push to any branch
+       │
+       ▼
+  Setup + Checkout + jf pipc
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│  output=$(jf ca --format=table)          │
+│  echo "$output"                          │
+│  grep "blocked package"?                 │
+│    YES → ::error:: + exit 1 ❌           │
+│    NO  → continue ✅                     │
+└────────┬─────────────────────────────────┘
+         │ (no blocked packages)
+         ▼
+  jf pip install -r requirements.txt
+```
+
+---
+
+#### Required GitHub repository configuration
+
+| Setting | Where to configure | Value |
+|---|---|---|
+| `JF_OIDC_PROVIDER_NAME` | Settings → Variables → Actions | Name of the OIDC provider configured in JFrog |
+| Workflow permissions | Settings → Actions → General | `id-token: write` (for OIDC), `contents: read` |
 
 ### Docker Example
 
